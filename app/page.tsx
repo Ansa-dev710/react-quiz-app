@@ -40,16 +40,16 @@ export default function Home() {
     const isCorrect = index === quizData[currentQuestion].correctAnswer;
     setIsAnswerCorrect(isCorrect);
 
-    // Play Sound Logic
-    const soundEffect = new Audio(isCorrect ? '/correct.mp3' : '/wrong.mp3');
-    soundEffect.volume = 0.3; // Volume set to 30%
+    
+    const soundEffect = new Audio(isCorrect ? '\correct .mp3' : '/wrong.mp3');
+    soundEffect.volume = 0.3; 
     soundEffect.play().catch(e => console.log("Sound play error:", e));
 
     if (isCorrect) {
       setScore((prev) => prev + 1);
     }
     
-    // Thora extra delay taake user sound aur feedback mehsoos kar sake
+    
     setTimeout(() => handleNextQuestion(), 1500);
   };
 
@@ -61,7 +61,7 @@ export default function Home() {
     if (currentQuestion + 1 < quizData.length) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      // Final result save karne ke liye hum check karte hain score latest hai
+  
       saveQuizScore(score, quizData.length);
       setShowScore(true);
     }
@@ -75,7 +75,7 @@ export default function Home() {
     setTimeLeft(15);
   };
 
-  // --- Start Screen ---
+  
   if (!isStarted) {
     return (
       <main className="min-h-screen flex items-center justify-center p-6 bg-background">
@@ -115,7 +115,6 @@ export default function Home() {
     );
   }
 
-  // --- Quiz UI ---
   const { question, options } = quizData[currentQuestion];
 
   return (
