@@ -1,65 +1,148 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { QUIZ_QUESTIONS } from '@/data/quiz-data'; 
+import ScoreCard from '@/components/scoreCard';
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showScore, setShowScore] = useState(false);
+  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
+  const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
+  const [timeLeft, setTimeLeft] = useState(15);
+
+  const quizData = QUIZ_QUESTIONS;
+  const progressPercentage = ((currentQuestion + 1) / quizData.length) * 100;
+
+  // Timer Logic
+  useEffect(() => {
+    if (showScore || timeLeft <= 0 || selectedAnswerIndex !== null) return;
+
+    const timer = setTimeout(() => {
+      if (timeLeft === 1) {
+        handleNextQuestion(); // Time khatam hone par auto-next
+      }
+      setTimeLeft(timeLeft - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [timeLeft, showScore, selectedAnswerIndex]);
+
+  const handleAnswerClick = (index: number) => {
+    if (selectedAnswerIndex !== null) return;
+
+    setSelectedAnswerIndex(index);
+    const correctIndex = quizData[currentQuestion].correctAnswer;
+    const isCorrect = index === correctIndex;
+    
+    setIsAnswerCorrect(isCorrect);
+    if (isCorrect) setScore(score + 1);
+    
+    setTimeout(() => {
+      handleNextQuestion();
+    }, 1500);
+  };
+
+  const handleNextQuestion = () => {
+    setSelectedAnswerIndex(null);
+    setIsAnswerCorrect(null);
+    setTimeLeft(15);
+
+    const nextQuestion = currentQuestion + 1;
+    if (nextQuestion < quizData.length) {
+      setCurrentQuestion(nextQuestion);
+    } else {
+      setShowScore(true);
+    }
+  };
+
+  const handleResetQuiz = () => {
+    setCurrentQuestion(0);
+    setScore(0);
+    setShowScore(false);
+    setTimeLeft(15);
+  };
+
+  if (showScore) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-6 bg-gray-50 dark:bg-gray-950">
+        <ScoreCard score={score} totalQuestions={quizData.length} onReset={handleResetQuiz} />
       </main>
-    </div>
+    );
+  }
+
+  const { question, options } = quizData[currentQuestion];
+
+  return (
+    <main className="min-h-screen p-4 md:p-12 bg-gray-50 dark:bg-gray-950 font-sans">
+      <div className="max-w-3xl mx-auto">
+        
+        {/* Header: Progress & Title */}
+        <header className="mb-8 flex flex-col gap-4 p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+          <div className="flex justify-between items-center">
+             <h1 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+               <span className="bg-blue-600 text-white p-1 rounded-lg text-sm">JS</span> Quiz Master
+             </h1>
+             <div className={`px-4 py-1 rounded-full text-sm font-bold border ${timeLeft <= 5 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+               {timeLeft}s Left
+             </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <span>Question {currentQuestion + 1} of {quizData.length}</span>
+              <span>{Math.round(progressPercentage)}% Complete</span>
+            </div>
+            <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+              <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} className="h-full bg-blue-600" />
+            </div>
+          </div>
+        </header>
+
+        {/* Main Quiz Area */}
+        <AnimatePresence mode="wait">
+          <motion.section
+            key={currentQuestion}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-8 bg-white dark:bg-gray-900 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-8 leading-snug">
+              {question}
+            </h2>
+
+            <div className="grid grid-cols-1 gap-4">
+              {options.map((option: string, index: number) => {
+                const isSelected = selectedAnswerIndex === index;
+                const isCorrect = index === quizData[currentQuestion].correctAnswer;
+                const isWrong = isSelected && !isAnswerCorrect;
+
+                let stateClass = "border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-gray-800";
+                if (selectedAnswerIndex !== null) {
+                  if (isCorrect) stateClass = "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 shadow-sm shadow-green-100";
+                  else if (isWrong) stateClass = "border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400";
+                  else stateClass = "opacity-50 border-gray-100 dark:border-gray-800 grayscale";
+                }
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleAnswerClick(index)}
+                    disabled={selectedAnswerIndex !== null}
+                    className={`flex items-center justify-between p-5 rounded-xl border-2 text-left transition-all duration-200 group ${stateClass}`}
+                  >
+                    <span className="text-lg font-medium">{option}</span>
+                    {selectedAnswerIndex !== null && isCorrect && <span className="text-xl">✅</span>}
+                    {selectedAnswerIndex !== null && isWrong && <span className="text-xl">❌</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.section>
+        </AnimatePresence>
+      </div>
+    </main>
   );
 }
