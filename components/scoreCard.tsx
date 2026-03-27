@@ -1,43 +1,54 @@
 'use client';
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Confetti from 'react-confetti';
 
-interface ScoreCardProps {
+interface Props {
   score: number;
   totalQuestions: number;
   onReset: () => void;
 }
 
-export default function ScoreCard({ score, totalQuestions, onReset }: ScoreCardProps) {
+export default function ScoreCard({ score, totalQuestions, onReset }: Props) {
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const percentage = (score / totalQuestions) * 100;
 
+  useEffect(() => {
+    
+    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+  }, []);
+
   return (
-    <motion.div 
-      initial={{ scale: 0.9, opacity: 0 }} 
-      animate={{ scale: 1, opacity: 1 }}
-      className="max-w-md w-full p-10 bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl text-center border border-gray-100 dark:border-gray-800"
-    >
-      <div className="text-6xl mb-4">
-        {percentage >= 70 ? '🎉' : percentage >= 40 ? '👍' : '😭'}
-      </div>
-      <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Quiz Results</h2>
-      <p className="text-gray-500 dark:text-gray-400 mb-8 font-medium">
-        {percentage >= 70 ? 'Excellent performance!' : 'Keep practicing, you can do it!'}
-      </p>
+    <div className="relative flex items-center justify-center w-full">
+      
+      {percentage >= 70 && (
+        <Confetti width={windowSize.width} height={windowSize.height} recycle={false} numberOfPieces={500} />
+      )}
 
-      <div className="relative inline-flex items-center justify-center mb-8">
-         <div className="text-5xl font-black text-blue-600 italic">
-           {score}<span className="text-2xl text-gray-300 not-italic"> / {totalQuestions}</span>
-         </div>
-      </div>
-
-      <button
-        onClick={onReset}
-        className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-200 dark:shadow-none transition-all active:scale-95"
+      <motion.div 
+        initial={{ scale: 0.8, opacity: 0 }} 
+        animate={{ scale: 1, opacity: 1 }}
+        className="max-w-md w-full p-12 bg-white dark:bg-gray-900 rounded-[3rem] shadow-2xl text-center border border-gray-100 dark:border-gray-800 z-10"
       >
-        Try Again
-      </button>
-    </motion.div>
+        <div className="text-7xl mb-6">{percentage >= 70 ? '🏆' : '📚'}</div>
+        <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-2">
+          {percentage >= 70 ? 'Congrats!' : 'Good Try!'}
+        </h2>
+        
+        <div className="my-8 py-6 bg-blue-50 dark:bg-blue-900/20 rounded-3xl">
+          <p className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-1">Your Score</p>
+          <div className="text-6xl font-black text-gray-900 dark:text-white italic">
+            {score}<span className="text-2xl text-gray-400 not-italic">/{totalQuestions}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={onReset}
+          className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all active:scale-95"
+        >
+          Try Again
+        </button>
+      </motion.div>
+    </div>
   );
 }
