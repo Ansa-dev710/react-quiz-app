@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import Confetti from 'react-confetti';
 
 interface Props {
@@ -14,7 +14,17 @@ export default function ScoreCard({ score, totalQuestions, onReset }: Props) {
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const percentage = (score / totalQuestions) * 100;
 
-  // --- RANK LOGIC ---
+  // Count-up animation logic
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => Math.round(latest));
+
+  useEffect(() => {
+    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    // Animate from 0 to actual score over 2 seconds
+    const controls = animate(count, score, { duration: 1.5, ease: "easeOut" });
+    return controls.stop;
+  }, [score]);
+
   const getRank = () => {
     if (percentage === 100) return { title: "Grand Master", color: "text-purple-500", bg: "bg-purple-500/10", icon: "👑" };
     if (percentage >= 80) return { title: "Pro Developer", color: "text-green-500", bg: "bg-green-500/10", icon: "🔥" };
@@ -24,10 +34,6 @@ export default function ScoreCard({ score, totalQuestions, onReset }: Props) {
 
   const rank = getRank();
 
-  useEffect(() => {
-    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-  }, []);
-
   return (
     <div className="relative flex items-center justify-center w-full min-h-[400px]">
       {percentage >= 70 && (
@@ -36,41 +42,67 @@ export default function ScoreCard({ score, totalQuestions, onReset }: Props) {
           height={windowSize.height}
           recycle={false}
           numberOfPieces={500}
-          gravity={0.2}
+          gravity={0.15}
+          colors={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']}
         />
       )}
 
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="max-w-md w-full p-10 bg-white dark:bg-gray-900 rounded-[3rem] shadow-2xl text-center border border-gray-100 dark:border-gray-800 z-10"
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: "spring", damping: 15 }}
+        className="max-w-md w-full p-10 bg-white dark:bg-zinc-900 rounded-[3rem] shadow-2xl text-center border border-zinc-100 dark:border-zinc-800 z-10"
       >
-        {/* Rank Icon & Badge */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="text-7xl mb-4">{rank.icon}</div>
-          <div className={`px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest ${rank.bg} ${rank.color} border border-current/20`}>
+        {/* Rank Badge Animation */}
+        <motion.div 
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex flex-col items-center mb-6"
+        >
+          <motion.div 
+            animate={{ y: [0, -10, 0] }}
+            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+            className="text-7xl mb-4"
+          >
+            {rank.icon}
+          </motion.div>
+          <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] ${rank.bg} ${rank.color} border border-current/20`}>
             Rank: {rank.title}
           </div>
-        </div>
+        </motion.div>
 
-        <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tighter italic">
-          {percentage >= 80 ? 'EXCEPTIONAL!' : percentage >= 50 ? 'GOOD JOB!' : 'TRY AGAIN!'}
+        <h2 className="text-4xl font-black text-zinc-900 dark:text-white mb-2 tracking-tighter italic">
+          {percentage >= 80 ? 'EXCEPTIONAL!' : percentage >= 50 ? 'GOOD JOB!' : 'KEEP PUSHING!'}
         </h2>
 
-        <div className="my-8 py-6 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-2">Quiz Performance</p>
-          <div className="text-6xl font-black text-gray-900 dark:text-white italic">
-            {score}<span className="text-2xl text-gray-400 not-italic">/{totalQuestions}</span>
+        {/* Animated Score Box */}
+        <div className="my-8 py-8 bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border border-dashed border-zinc-200 dark:border-zinc-700 relative overflow-hidden">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-2">Final Score</p>
+          <div className="text-7xl font-black text-zinc-900 dark:text-white italic flex items-center justify-center gap-1">
+            <motion.span>{rounded}</motion.span>
+            <span className="text-3xl text-zinc-300 dark:text-zinc-600 not-italic">/{totalQuestions}</span>
           </div>
-          <p className="text-sm font-medium text-gray-500 mt-2">Accuracy: {Math.round(percentage)}%</p>
+          
+          {/* Progress Mini-Bar inside ScoreCard */}
+          <div className="mt-4 mx-auto w-32 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${percentage}%` }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              className={`h-full ${rank.color.replace('text', 'bg')}`}
+            />
+          </div>
         </div>
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02, backgroundColor: '#1d4ed8' }}
+          whileTap={{ scale: 0.98 }}
           onClick={onReset}
-          className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/30 transition-all active:scale-95"
+          className="w-full py-5 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-500/20 transition-colors text-lg"
         >
-          Retake Challenge
-        </button>
+          RETAKE CHALLENGE
+        </motion.button>
       </motion.div>
     </div>
   );
