@@ -95,7 +95,7 @@ export default function Home() {
         playSound('correct');
         setScore((prev) => prev + 1);
     } else {
-        playSound('wrong');
+        playSound('wrong.mp3');
     }
     
     setTimeout(() => handleNextQuestion(), 1200);

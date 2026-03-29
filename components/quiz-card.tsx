@@ -7,26 +7,32 @@ interface QuizCardProps {
   currentQuestion: number;
   totalQuestions: number;
   onAnswer: (index: number) => void;
-  selectedAnswerIndex: number | null; // Naya prop
-  correctAnswer: number; // Naya prop
+  selectedAnswerIndex: number | null;
+  correctAnswer: number;
 }
 
-export default function QuizCard({ 
-  question, 
-  options, 
-  currentQuestion, 
-  totalQuestions, 
+export default function QuizCard({
+  question,
+  options,
+  currentQuestion,
+  totalQuestions,
   onAnswer,
   selectedAnswerIndex,
-  correctAnswer 
+  correctAnswer,
 }: QuizCardProps) {
-  
+  const hasAnswered = selectedAnswerIndex !== null;
+
+  const buttonVariants = {
+    wrong: { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } },
+    correct: { scale: [1, 1.05, 1], transition: { duration: 0.3 } },
+  };
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
       className="space-y-8"
     >
       {/* Progress Section */}
@@ -35,7 +41,7 @@ export default function QuizCard({
           Question {currentQuestion + 1} / {totalQuestions}
         </span>
         <div className="h-1.5 w-32 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-          <motion.div 
+          <motion.div
             className="h-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]"
             initial={{ width: 0 }}
             animate={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }}
@@ -53,9 +59,7 @@ export default function QuizCard({
           const isSelected = selectedAnswerIndex === index;
           const isCorrect = index === correctAnswer;
           const isWrong = isSelected && index !== correctAnswer;
-          const hasAnswered = selectedAnswerIndex !== null;
 
-          // Dynamic Styles based on selection
           let borderStyle = "border-slate-200 dark:border-slate-800";
           let bgStyle = "bg-white dark:bg-slate-900/50";
           let textStyle = "text-slate-700 dark:text-slate-300";
@@ -78,16 +82,14 @@ export default function QuizCard({
             <motion.button
               key={index}
               disabled={hasAnswered}
-              whileHover={!hasAnswered ? { scale: 1.02, x: 8 } : {}}
+              variants={buttonVariants}
+              animate={isWrong ? "wrong" : isSelected && isCorrect ? "correct" : ""}
+              whileHover={!hasAnswered ? { scale: 1.01, x: 5 } : {}}
               whileTap={!hasAnswered ? { scale: 0.98 } : {}}
               onClick={() => onAnswer(index)}
-              className={`group flex items-center justify-between p-6 rounded-3xl border-2 transition-all duration-300 text-left ${borderStyle} ${bgStyle}`}
+              className={`group flex items-center justify-between p-6 rounded-2xl border-2 transition-all duration-300 text-left ${borderStyle} ${bgStyle}`}
             >
-              <span className={`text-sm font-bold ${textStyle}`}>
-                {option}
-              </span>
-
-              {/* Status Icon */}
+              <span className={`text-sm font-bold ${textStyle}`}>{option}</span>
               <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
                 isCorrect && hasAnswered ? "border-green-500 bg-green-500" : 
                 isWrong ? "border-red-500 bg-red-500" : "border-slate-200 dark:border-slate-700"
