@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import Confetti from 'react-confetti';
-import { FiRefreshCcw, FiAward, FiZap, FiAlertTriangle } from 'react-icons/fi';
+import { FiRefreshCcw, FiAward, FiZap, FiAlertTriangle, FiCheck } from 'react-icons/fi';
 
 interface Props {
   score: number;
@@ -14,21 +14,32 @@ interface Props {
 export default function ScoreCard({ score, totalQuestions, onReset }: Props) {
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const percentage = (score / totalQuestions) * 100;
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Count-up animation logic
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => Math.round(latest));
 
   useEffect(() => {
+    
     setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    
+    
     const controls = animate(count, score, { duration: 1.5, ease: "easeOut" });
-    return controls.stop;
-  }, [score, count]);
+
+    
+    if (percentage >= 70) {
+      const victorySound = new Audio('/correct.mp3'); 
+      victorySound.volume = 0.5;
+      victorySound.play().catch(() => console.log("Sound blocked"));
+    }
+
+    return () => controls.stop();
+  }, [score, count, percentage]);
 
   const getRank = () => {
     if (percentage === 100) return { title: "Grand Master", color: "text-lime-400", glow: "shadow-lime-500/50", icon: <FiZap className="text-lime-400" /> };
     if (percentage >= 80) return { title: "Pro Developer", color: "text-lime-400", glow: "shadow-lime-500/30", icon: <FiAward className="text-lime-400" /> };
-    if (percentage >= 50) return { title: "Intermediate", color: "text-zinc-400", glow: "shadow-zinc-500/20", icon: <FiCheckCircle className="text-zinc-400" /> };
+    if (percentage >= 50) return { title: "Intermediate", color: "text-zinc-400", glow: "shadow-zinc-500/20", icon: <FiCheck className="text-zinc-400" /> };
     return { title: "Beginner", color: "text-red-500", glow: "shadow-red-500/30", icon: <FiAlertTriangle className="text-red-500" /> };
   };
 
@@ -45,7 +56,7 @@ export default function ScoreCard({ score, totalQuestions, onReset }: Props) {
           height={windowSize.height}
           recycle={false}
           numberOfPieces={400}
-          gravity={0.2}
+          gravity={0.15}
           colors={['#a3e635', '#ffffff', '#166534']}
         />
       )}
@@ -116,9 +127,3 @@ export default function ScoreCard({ score, totalQuestions, onReset }: Props) {
     </div>
   );
 }
-
-// Simple internal component for the check icon if missing from imports
-function FiCheckCircle({ className, size }: { className?: string, size?: number }) {
-  return <FiCheck className={className} size={size} />;
-}
-import { FiCheck } from 'react-icons/fi';
