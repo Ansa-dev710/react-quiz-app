@@ -7,7 +7,7 @@ interface UserRank {
   rank: "Pro" | "Intermediate" | "Beginner";
 }
 
-// Mock Data: In real app, this comes from MongoDB
+
 const MOCK_LEADERBOARD: UserRank[] = [
   { name: "Ansa Asghar", score: 95, rank: "Pro" },
   { name: "Sarah Dev", score: 82, rank: "Intermediate" },
@@ -40,7 +40,7 @@ export default function Leaderboard() {
               className="group flex items-center justify-between p-5 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-blue-500/30 transition-all shadow-sm hover:shadow-md"
             >
               <div className="flex items-center gap-5">
-                {/* Rank Number with Circle */}
+        
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-black ${
                   index === 0 ? "bg-yellow-100 text-yellow-600" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
                 }`}>

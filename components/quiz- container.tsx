@@ -15,7 +15,7 @@ export default function QuizContainer() {
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
-  // Logic to determine rank
+  
   const getRank = (s: number) => {
     if (s === QUESTIONS.length) return "Pro";
     if (s >= QUESTIONS.length / 2) return "Intermediate";
@@ -39,7 +39,7 @@ export default function QuizContainer() {
   if (isFinished) {
     return (
       <div className="max-w-2xl mx-auto py-20 px-6">
-        {/* User's Personal Result Card */}
+        
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -60,7 +60,7 @@ export default function QuizContainer() {
           </div>
         </motion.div>
 
-        {/* Global Leaderboard Section */}
+    
         <Leaderboard />
 
         <button 
