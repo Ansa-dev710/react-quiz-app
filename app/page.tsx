@@ -4,11 +4,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QUIZ_SECTIONS, Question } from '@/data/quiz-data'; 
 import ScoreCard from '@/components/scoreCard';
+import Leaderboard from '@/components/leaderbord'; 
 import { saveQuizScore } from '@/utils/storage';
 
 // Icons
 import { FaChevronLeft, FaArrowRight } from "react-icons/fa"; 
-import { FiCpu, FiCheck, FiActivity, FiVolume2, FiVolumeX, FiZap } from "react-icons/fi"; 
+import { FiCpu, FiCheck, FiActivity, FiVolume2, FiVolumeX, FiZap, FiBarChart2 } from "react-icons/fi"; 
 
 const shuffleQuestions = (array: Question[]) => {
   const shuffled = [...array];
@@ -27,6 +28,7 @@ export default function Home() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
   const [timeLeft, setTimeLeft] = useState(15);
@@ -61,7 +63,7 @@ export default function Home() {
   }, [currentQuestion, shuffledData.length, score]);
 
   useEffect(() => {
-    if (!isStarted || showScore || timeLeft <= 0 || selectedAnswerIndex !== null || showExitModal) return;
+    if (!isStarted || showScore || timeLeft <= 0 || selectedAnswerIndex !== null || showExitModal || showLeaderboard) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev === 1) {
@@ -73,7 +75,7 @@ export default function Home() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [isStarted, showScore, selectedAnswerIndex, showExitModal, handleNextQuestion, timeLeft]);
+  }, [isStarted, showScore, selectedAnswerIndex, showExitModal, handleNextQuestion, timeLeft, showLeaderboard]);
 
   const handleStartQuiz = (cat: string) => {
     const data = QUIZ_SECTIONS[cat];
@@ -85,6 +87,7 @@ export default function Home() {
     setSelectedAnswerIndex(null);
     setIsAnswerCorrect(null);
     setShowScore(false);
+    setShowLeaderboard(false);
     setShuffledData(shuffleQuestions(data));
     setSelectedCategory(cat);
     setIsStarted(true);
@@ -105,6 +108,51 @@ export default function Home() {
     setTimeout(() => handleNextQuestion(), 1500);
   };
 
+  // 1. LEADERBOARD VIEW
+  if (showLeaderboard) {
+    return (
+      <main className="min-h-screen bg-black flex flex-col items-center py-12 px-6">
+        <Leaderboard />
+        <motion.button 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => {
+            setIsStarted(false);
+            setShowScore(false);
+            setShowLeaderboard(false);
+          }}
+          className="mt-12 flex items-center gap-3 px-8 py-4 border border-white/5 text-zinc-500 rounded-2xl text-[10px] font-black tracking-widest uppercase hover:text-white hover:border-white/10 transition-all italic"
+        >
+          <FaChevronLeft size={10} /> Back_to_Menu
+        </motion.button>
+      </main>
+    );
+  }
+
+  // 2. SCORE VIEW
+  if (showScore) {
+    return (
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center p-6">
+        <ScoreCard 
+          score={score} 
+          totalQuestions={shuffledData.length} 
+          onReset={() => setIsStarted(false)} 
+        />
+        {/* Navigation to Leaderboard */}
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          onClick={() => setShowLeaderboard(true)}
+          className="z-50 -mt-16 mb-20 flex items-center gap-3 px-8 py-4 bg-zinc-900/50 border border-white/5 text-lime-400 rounded-2xl text-[10px] font-black tracking-widest uppercase hover:bg-lime-400 hover:text-black transition-all italic shadow-2xl"
+        >
+          <FiBarChart2 size={16} /> View_Global_Rankings
+        </motion.button>
+      </main>
+    );
+  }
+
+  // 3. MENU VIEW
   if (!isStarted) {
     return (
       <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -158,14 +206,11 @@ export default function Home() {
     );
   }
 
-  if (showScore) {
-    return <ScoreCard score={score} totalQuestions={shuffledData.length} onReset={() => setIsStarted(false)} />;
-  }
-
+  // 4. QUIZ VIEW
   const currentData = shuffledData[currentQuestion];
 
   return (
-    <main className="min-h-screen bg-black text-white p-6 md:p-12 flex flex-col items-center font-sans overflow-hidden">
+    <main className="min-h-screen bg-black text-white p-6 md:p-12 flex flex-col items-center font-sans overflow-hidden relative">
       <div className="w-full max-w-6xl relative z-10">
         <header className="flex justify-between items-center mb-16 border-b border-zinc-900 pb-8">
           <button onClick={() => setShowExitModal(true)} className="flex items-center gap-3 text-[10px] font-black text-zinc-600 hover:text-red-500 transition-all uppercase tracking-[0.3em] italic">
@@ -223,8 +268,8 @@ export default function Home() {
 
                   let style = "bg-zinc-900/20 border-zinc-800/50 text-zinc-500 hover:border-lime-400/50 hover:text-white";
                   if (selectedAnswerIndex !== null) {
-                    if (isCorrect) style = "bg-lime-400 border-lime-400 text-black shadow-[0_0_40px_rgba(163,230,53,0.3)]";
-                    else if (isWrong) style = "bg-red-600 border-red-600 text-white shadow-[0_0_40px_rgba(220,38,38,0.3)]";
+                    if (isCorrect) style = "bg-lime-400 border-lime-400 text-black shadow-[0_0_40px_#a3e635]";
+                    else if (isWrong) style = "bg-red-600 border-red-600 text-white shadow-[0_0_40px_#dc2626]";
                     else style = "opacity-10 scale-95 blur-[2px]";
                   }
 
